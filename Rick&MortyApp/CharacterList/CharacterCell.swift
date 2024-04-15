@@ -37,7 +37,7 @@ final class CharacterCell: UICollectionViewCell {
     func fillCell(model: CharacterCell.Model) {
         label.text = model.title
         guard let imageString = model.image, let url = URL(string: imageString) else { return }
-        imageView.load(url: url)
+        NetworkService.shared.downloadImageFrom(url: url, imageView: imageView)
     }
 
     private func configCell() {

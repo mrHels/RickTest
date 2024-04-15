@@ -32,7 +32,7 @@ final class AvatarCell: UITableViewCell {
         nameLable.text = model?.nameCharacter ?? "None"
         ripLabel.text = model?.rip ?? "None"
         guard let imageString = model?.avatarImage, let url = URL(string: imageString) else { return }
-        avatarImage.load(url: url)
+        NetworkService.shared.downloadImageFrom(url: url, imageView: avatarImage)
     }
 
     private func configCell() {

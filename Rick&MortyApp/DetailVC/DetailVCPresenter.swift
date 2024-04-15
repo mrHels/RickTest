@@ -14,6 +14,7 @@ protocol DetailVCPresenterProtocol: AnyObject {
 final class DetailVCPresenter: DetailVCPresenterProtocol {
 
     weak var output: DetailVCPresenterOutput?
+    
     private let character: CharacterCell.Model
     private let episodeProv = EpisodeProvider()
 

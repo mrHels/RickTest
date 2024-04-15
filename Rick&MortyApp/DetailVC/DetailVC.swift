@@ -43,16 +43,20 @@ final class DetailVC: UIViewController {
         detailTableView.register(OriginCell.self, forCellReuseIdentifier: "originCell")
         detailTableView.register(EpisodeCell.self, forCellReuseIdentifier: "episodeCell")
         detailTableView.register(AvatarCell.self, forCellReuseIdentifier: "avatarCell")
-        detailTableView.translatesAutoresizingMaskIntoConstraints = false
 
+        detailTableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             detailTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             detailTableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             detailTableView.rightAnchor.constraint(equalTo: view.rightAnchor),
             detailTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-    }
 
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "arrowshape.turn.up.right"),
+                                                            style: .plain,
+                                                            target: self,
+                                                            action: #selector(activityStarted))
+    }
 }
 
 extension DetailVC: UITableViewDelegate {
@@ -150,6 +154,13 @@ extension DetailVC: DetailVCPresenterOutput {
             self.detailTableView.reloadData()
         }
     }
+}
 
+private extension DetailVC {
+    @objc func activityStarted() {
+        guard let imageStr = avatarDataSource?.avatarImage, let url = URL(string: imageStr) else { return }
 
+        let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        present(activityController, animated: true)
+    }
 }

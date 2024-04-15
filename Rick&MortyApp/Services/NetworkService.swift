@@ -5,89 +5,18 @@
 //  Created by user on 20.08.2023.
 //
 
-import Foundation
+import UIKit
 
-struct UrlList: Decodable {
-    let characters: String?
-    let locations: String?
-    let episodes: String?
-}
-
-struct resultCharacters: Decodable {
-    let info: InfoForCharacterData?
-    let results: [Person]?
-}
-
-struct InfoForCharacterData: Decodable {
-    let countCharacters: Int?
-    let pages: Int?
-}
-
-struct Person: Decodable {
-    let id: Int?
-    let name: String?
-    let status: String?
-    let species: String?
-    let typeCreated: String?
-    let gender: String?
-    let origin: OriginStruct
-    let image: String?
-    let episode: [String]?
-}
-
-struct OriginStruct: Decodable {
-    let name: String?
-    let url: String?
-}
-
-struct ResultId: Decodable {
-    let name: String?
-    let type: String?
-    let dimension: String?
-    let created: String?
-}
-
-struct EpisodeRM: Decodable {
-    let results: [EpisodeDetail]?
-}
-
-struct EpisodeDetail: Decodable {
-    let id: Int
-    let name: String
-    let air_date: String
-    let episode: String
-}
-
-class NetworkService {
+final class NetworkService {
 
     static let shared = NetworkService()
+    
+    private let imageCache = NSCache<NSString, AnyObject>()
     private init() {}
 
     private let startUrl = "https://rickandmortyapi.com/api"
 
-    private func getData <T:Decodable> (with url: URL, completion: @escaping (T?) -> () ) {
-
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-            do {
-                let urlList = try JSONDecoder().decode(T.self, from: data)
-                completion(urlList)
-            } catch let error {
-                print(error)
-            }
-        }.resume()
-    }
-
-    func getDataFrom <T: Decodable> (urlString: String? = nil, completion: @escaping (T?) -> () ) {
-        guard let url = URL(string: urlString ?? startUrl) else {
-            completion(nil)
-            return
-        }
-        getData(with: url, completion: completion)
-    }
+    // MARK: - Public
 
     func getCharacterList(completion: @escaping (resultCharacters?) -> () ) {
         getDataFrom { [weak self] (urlList: UrlList?) in
@@ -108,6 +37,45 @@ class NetworkService {
             self?.getData(with: url, completion: completion)
         }
     }
+
+    func getDataFrom <T: Decodable> (urlString: String? = nil, completion: @escaping (T?) -> () ) {
+        guard let url = URL(string: urlString ?? startUrl) else {
+            completion(nil)
+            return
+        }
+        getData(with: url, completion: completion)
+    }
+
+    func downloadImageFrom(url: URL, imageView: UIImageView) {
+        if let cachedImage = imageCache.object(forKey: url.absoluteString as NSString) as? UIImage {
+            imageView.image = cachedImage
+        } else {
+            DispatchQueue.global().async { [weak self] in
+                if let data = try? Data(contentsOf: url), let imageToCache = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        imageView.image = imageToCache
+                        self?.imageCache.setObject(imageToCache, forKey: url.absoluteString as NSString)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Private
+
+    private func getData <T:Decodable> (with url: URL, completion: @escaping (T?) -> () ) {
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            guard let data = data, error == nil else {
+                completion(nil)
+                return
+            }
+            do {
+                let urlList = try JSONDecoder().decode(T.self, from: data)
+                completion(urlList)
+            } catch let error {
+                print(error)
+                completion(nil)
+            }
+        }.resume()
+    }
 }
-
-
